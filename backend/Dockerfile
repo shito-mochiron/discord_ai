@@ -1,5 +1,5 @@
 # Node.jsの公式イメージをベースにする
-FROM node:18
+FROM node:22
 
 # 作業ディレクトリの設定
 WORKDIR /app
