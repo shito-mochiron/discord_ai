@@ -1,2 +1,5 @@
 # discord_ai
-discordのAIchat
+
+discord の AIchat
+
+test
