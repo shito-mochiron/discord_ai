@@ -13,3 +13,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Chat {
+  id        String     @id @default(uuid()) @db.Uuid
+  messages  Message[]  // 1対多の関係
+  createdAt DateTime   @default(now())
+}
+
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  chatId    String
+  content   String
+  createdAt DateTime @default(now())
+}
