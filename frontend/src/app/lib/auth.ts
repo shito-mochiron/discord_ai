@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, account }) {
-        if (account) {
+        if (account?.id_token) {
           token.idToken = account.id_token; // Google から受け取った id_token を保存
         }
         return token;
@@ -23,5 +23,7 @@ export const authOptions: NextAuthOptions = {
         return session;
       },
     },
-    secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
 };
+
+export default NextAuth(authOptions);

@@ -2,39 +2,59 @@
 
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { authOptions } from "@/app/lib/auth";
+import { useRouter } from "next/navigation";
 import { LogoutButton } from "@/app/components/logoutbutton";
 
 export default function Dashboard() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   console.log("Session Data:", session); 
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    if (session?.idToken) {
-      fetch("/api/user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.idToken}`,
-        },
-        body: JSON.stringify({
-          name: session.user?.name,
-          email: session.user?.email,
-          image: session.user?.image,
-        }),
-      });
-    }
-  }, [session]);
+    const verifyToken = async () => {
+      if (!session?.idToken) {
+        setIsLoading(false);
+        return;
+      }
+  
+      try {
+        const res = await fetch("/api/user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: session.idToken }),
+        });
+  
+        const data = await res.json();
+  
+        if (data.success) {
+          console.log("Token verification successful", data);
+          router.push("/home"); // ✅ 成功時にリダイレクト
+        } else {
+          setError("Token verification failed");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    verifyToken();
+  }, [session, router]);
 
   if (!session) {
     return <p>ログインが必要です。</p>;
   }
 
-  return (
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return 
     <main className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl">Dashboard</h1>
-      <p>ようこそ, {session.user?.name}!</p>
+      <p>Verifying token...</p>
       <LogoutButton />
     </main>
-  );
 }
