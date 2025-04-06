@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-export class CreateUserGoogleDto {
+export class GoogleSignupRequestDto {
     @IsString()
     @IsNotEmpty()
     idToken: string;

@@ -1,10 +1,9 @@
 -- CreateTable
 CREATE TABLE "User" (
     "id" UUID NOT NULL,
-    "name" VARCHAR(255) NOT NULL,
-    "google_id" VARCHAR(255) NOT NULL,
+    "google_auth_sub" TEXT,
     "email" VARCHAR(255) NOT NULL,
-    "password" VARCHAR(255) NOT NULL,
+    "password" VARCHAR(255),
     "created_at" TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(0) NOT NULL,
 
@@ -12,4 +11,13 @@ CREATE TABLE "User" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_google_auth_sub_key" ON "User"("google_auth_sub");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+ALTER TABLE "User"
+ADD CONSTRAINT "User_auth_check"
+CHECK (
+  google_auth_sub IS NOT NULL OR password IS NOT NULL
+);
