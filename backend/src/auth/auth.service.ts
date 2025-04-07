@@ -53,29 +53,10 @@ export class AuthService {
         const { idToken } = googleSignupRequestDto;
 
         try {
-            // const ticket = await this.client.verifyIdToken({
-            //     idToken,
-            //     audience: this.googleClientId,
-            // });
-
-            const ticket = {
-                getPayload: () => ({
-                  iss: 'https://accounts.google.com',
-                  azp: '1063198645583-4e5ju33btc6pk6gvh4eubv3tqhvokfej.apps.googleusercontent.com',
-                  aud: '1063198645583-4e5ju33btc6pk6gvh4eubv3tqhvokfej.apps.googleusercontent.com',
-                  sub: '109941292748519685104',
-                  hd: 'mochiron.co.jp',
-                  email: 'ryoueda@mochiron.co.jp',
-                  email_verified: true,
-                  at_hash: 'iZqrNvDEUKbzzCgvWOqugA',
-                  name: '上田凌',
-                  picture: 'https://lh3.googleusercontent.com/a/ACg8ocKxV7rIY3UqGXCMtlvlVBZ7ra2cabw1-0A_BXnx5rJqPxgcocA=s96-c',
-                  given_name: '凌',
-                  family_name: '上田',
-                  iat: 1743723303,
-                  exp: 1743726903
-                })
-              };
+            const ticket = await this.client.verifyIdToken({
+                idToken,
+                audience: this.googleClientId,
+            });
             
             const payload = ticket.getPayload();
             if (!payload) {
@@ -132,28 +113,10 @@ export class AuthService {
         const { idToken } = googleLoginRequestDto;
 
         try {;
-            // const ticket = await this.client.verifyIdToken({
-            //     idToken,
-            //     audience: this.googleClientId,
-            // });
-            const ticket = {
-                getPayload: () => ({
-                  iss: 'https://accounts.google.com',
-                  azp: '1063198645583-4e5ju33btc6pk6gvh4eubv3tqhvokfej.apps.googleusercontent.com',
-                  aud: '1063198645583-4e5ju33btc6pk6gvh4eubv3tqhvokfej.apps.googleusercontent.com',
-                  sub: '109941292748519685104',
-                  hd: 'mochiron.co.jp',
-                  email: 'ryoueda@mochiron.co.jp',
-                  email_verified: true,
-                  at_hash: 'iZqrNvDEUKbzzCgvWOqugA',
-                  name: '上田凌',
-                  picture: 'https://lh3.googleusercontent.com/a/ACg8ocKxV7rIY3UqGXCMtlvlVBZ7ra2cabw1-0A_BXnx5rJqPxgcocA=s96-c',
-                  given_name: '凌',
-                  family_name: '上田',
-                  iat: 1743723303,
-                  exp: 1743726903
-                })
-              };
+            const ticket = await this.client.verifyIdToken({
+                idToken,
+                audience: this.googleClientId,
+            });
 
             const googlePayload = ticket.getPayload();
             if (!googlePayload) {
