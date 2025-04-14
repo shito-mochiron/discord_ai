@@ -13,18 +13,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model Chat {
-  id        String     @id @default(uuid()) @db.Uuid
-  title     String
-  messages  Message[]  // 1対多の関係
-  createdAt DateTime   @default(now())
+  chat_id    String   @id @default(uuid()) @db.Uuid
+  id    String
+  title      String
+  is_pinned  Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  user     User     @relation(fields: [id], references: [id])
+  messages Message[]
 }
 
 model Message {
-  id        String   @id @default(uuid()) @db.Uuid
-  chat      Chat     @relation(fields: [chatId], references: [id])
-  chatId    String
-  content   String
-  content_reply String
-  createdAt DateTime @default(now())
+  message_id    String   @id @default(uuid()) @db.Uuid
+  chat_id       String
+  content       String
+  content_reply String?
+  is_bookmarked Boolean  @default(false)
+  created_at    DateTime @default(now())
+
+  chat Chat @relation(fields: [chat_id], references: [chat_id])
 }
