@@ -179,10 +179,7 @@ paths:
             schema:
               type: object
               properties:
-                chat_id:
-                  type: string
-                  description: "チャットのID"
-                message:
+                content:
                   type: string
                   description: "メッセージの内容"
       responses:
@@ -199,8 +196,14 @@ paths:
                   chat_id:
                     type: string
                     description: "登録されたチャットのID"
+                  title:
+                    type: string
+                    description: "チャットのタイトル"
+                  content_reply:
+                    type: string
+                    description: "メッセージに対する返答"
       
-  /v1/chat/{id}:
+  /v1/chat/{chat_id}:
     get:
       summary: "チャットの取得"
       description: "チャットを取得する"
@@ -228,9 +231,12 @@ paths:
                   message_id:
                     type: string
                     description: "メッセージのID"
-                  message:
+                  content:
                     type: string
                     description: "メッセージ内容"
+                  content_reply:
+                    type: string
+                    description: "メッセージに対する返答"
 
   /v1/chat/pin:
     get:
@@ -274,7 +280,7 @@ paths:
                     type: string
                     description: "ピン留めしたチャットのID"
 
-  /v1/chat/pin/{id}:
+  /v1/chat/pin/{chat_id}:
     delete:
       summary: "ピン留め削除"
       description: "チャットをピン留めから削除する"

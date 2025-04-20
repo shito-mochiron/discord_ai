@@ -26,10 +26,11 @@ model User {
 
 model Chat {
   chat_id    String   @id @default(uuid()) @db.Uuid
-  id         String
+  id         String   @db.Uuid
   title      String
   is_pinned  Boolean  @default(false)
   created_at DateTime @default(now())
+  updated_at DateTime @updatedAt @db.Timestamp(0)
 
   user     User     @relation(fields: [id], references: [id])
   messages Message[]
@@ -37,11 +38,12 @@ model Chat {
 
 model Message {
   message_id    String   @id @default(uuid()) @db.Uuid
-  chat_id       String
+  chat_id       String   @db.Uuid
   content       String
   content_reply String?
   is_bookmarked Boolean  @default(false)
   created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt @db.Timestamp(0)
 
   chat Chat @relation(fields: [chat_id], references: [chat_id])
 }
