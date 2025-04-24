@@ -71,4 +71,13 @@ export class ChatService {
       title: generatedTitle, 
     };
   }
+
+  async getChat(chat_id: string) {
+    const messages = await this.prisma.message.findMany({
+      where: { chat_id },
+      orderBy: { created_at: 'asc' },
+    });
+
+    return messages;
+  }
 }
