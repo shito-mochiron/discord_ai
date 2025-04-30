@@ -80,4 +80,20 @@ export class ChatService {
 
     return messages;
   }
+
+  async setPinned(chat_id: string) {
+    const updatedChat = await this.prisma.chat.update({
+      where: { chat_id },
+      data: { is_pinned: true },
+    });
+    return updatedChat;
+  }
+  async unsetPinned(chat_id: string) {
+    const updatedChat = await this.prisma.chat.update({
+      where: { chat_id },
+      data: { is_pinned: false },
+    });
+    return updatedChat;
+  }
+
 }

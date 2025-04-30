@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { MessageRequestDto } from './dto/message-request.dto';
 
@@ -15,4 +15,15 @@ export class ChatController {
   async getChat(@Param('chat_id') chat_id: string) {
     return this.chatService.getChat(chat_id);
   }
+
+  @Put(':chat_id/pin')
+  async setPinned(@Param('chat_id') chat_id: string) {
+    return this.chatService.setPinned(chat_id);
+  }
+
+  @Put(':chat_id/unpin')
+  async unsetPinned(@Param('chat_id') chat_id: string) {
+    return this.chatService.unsetPinned(chat_id);
+  }
+
 }
