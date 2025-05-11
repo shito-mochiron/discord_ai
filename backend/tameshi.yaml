@@ -1,0 +1,462 @@
+openapi: "3.0.3"
+
+info:
+  title: "Discord-AI-BOT API"
+  version: "1.0.0"
+
+paths:
+  /v1/auth/signup/google:
+    post:
+      summary: ユーザー登録
+      description: Googleでログインしたユーザーを登録
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idtoken:
+                  type: string
+                  example: "103245678901234567890"
+      responses:
+        "200":
+          description: "ユーザー登録成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  user:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: "103245678901234567890"
+        "403":
+          description: "すでにアカウントが登録されています"
+        "401":
+          description: "認証エラー"
+
+  /v1/auth/signup/mail:
+    post:
+      summary: ユーザー登録
+      description: Mailでログインしたユーザーを登録
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "Wikn4f9gMN"
+      responses:
+        "200":
+          description: "ユーザー登録成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  user:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: "103245678901234567890"
+        "403":
+          description: "アカウントが存在しません"
+        "401":
+          description: "認証エラー"
+
+  /v1/auth/login/google:
+    post:
+      summary: セッションID生成
+      description: Google認証後の'id_token'を受け取り、セッションを作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_token:
+                  type: string
+                  example: "eyJhbGciOiJSUzI1NiIsImtpZCI6..."
+      responses:
+        "200":
+          description: "ログイン成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful"
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: "103245678901234567890"
+        "401":
+          description: "認証エラー"
+        
+  /v1/auth/login/mail:
+    post:
+      summary: セッションID生成
+      description: IDPWでログインするユーザーのセッションIDを作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@example.com"
+                passwaord:
+                  type: string
+                  example: "Wikn4f9gMN"
+      responses:
+        "200":
+          description: "ログイン成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "103245678901234567890"
+        "401":
+          description: "認証エラー"
+
+  /v1/user/{id}:
+    delete:
+      summary: ユーザーを削除
+      description: 指定したIDのユーザーを削除する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ユーザー削除成功
+        "401":
+          description: "認証エラー"
+      
+
+  /v1/messeage:
+    post:
+      summary: "メッセージの登録"
+      description: "メッセージを登録する"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                  description: "チャットのID"
+                message:
+                  type: string
+                  description: "メッセージの内容"
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message_id:
+                    type: string
+                    description: "登録されたメッセージのID"
+                  chat_id:
+                    type: string
+                    description: "登録されたチャットのID"
+      
+  /v1/chat/{id}:
+    get:
+      summary: "チャットの取得"
+      description: "チャットを取得する"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                  description: "チャットのID"
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat_id:
+                    type: string
+                    description: "チャットのID"
+                  message_id:
+                    type: string
+                    description: "メッセージのID"
+                  message:
+                    type: string
+                    description: "メッセージ内容"
+
+  /v1/chat/pin:
+    get:
+      summary: "ピン留め一覧取得"
+      description: "ピン留めされたチャットのタイトル一覧を取得する"
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pinned_chats:
+                    type: array
+                    items:
+                      type: string
+                    description: "ピン留めされたチャットのタイトル一覧"
+    post:
+      summary: "ピン留め登録"
+      description: "チャットをピン留めに登録する"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                  description: "ピン留めするチャットのID"
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat_id:
+                    type: string
+                    description: "ピン留めしたチャットのID"
+
+  /v1/chat/pin/{id}:
+    delete:
+      summary: "ピン留め削除"
+      description: "チャットをピン留めから削除する"
+      parameters:
+        - name: id
+          in: path
+          description: "削除するピン留めのチャットID"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat_id:
+                    type: string
+                    description: "ピン留から削除したチャットのID"
+
+  /v1/chat/history:
+    get:
+      summary: "履歴一覧取得"
+      description: "履歴にあるチャットのタイトルと日時の一覧を取得する"
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        chat_id:
+                          type: string
+                          description: "チャットのID"
+                        title:
+                          type: string
+                          description: "チャットのタイトル"
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: "チャットの日時"
+
+    delete:
+      summary: "履歴削除"
+      description: "履歴にある特定のチャットを削除する"
+      parameters:
+        - name: id
+          in: path
+          description: "削除する履歴のチャットID"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat_id:
+                    type: string
+                    description: "チャットのID"
+
+  /v1/chat/history/search:
+    get:
+      summary: "履歴検索"
+      description: "履歴にあるチャットのタイトル、メッセージ内容から特定のワードを検索する"
+      parameters:
+        - name: query
+          in: query
+          description: "検索するキーワード"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message_id:
+                          type: string
+                          description: "メッセージのID"
+                        chat_id:
+                          type: string
+                          description: "チャットのID"
+                        title:
+                          type: string
+                          description: "チャットのタイトル"
+                        message:
+                          type: string
+                          description: "メッセージ内容"
+
+  /v1/message/bookmark:
+    get:
+      summary: "ブックマーク一覧取得"
+      description: "ブックマークに登録されたメッセージの一覧を取得する"
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookmarks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        chat_id:
+                          type: string
+                          description: "チャットのID"                        
+                        message_id:
+                          type: string
+                          description: "メッセージのID"
+                        message:
+                          type: string
+                          description: "メッセージ内容"
+    post:
+      summary: "ブックマーク登録"
+      description: "生成結果をブックマークに登録する"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message_id:
+                  type: string
+                  description: "メッセージのID"
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat_id:
+                    type: string
+                    description: "チャットのID"                        
+                  message_id:
+                    type: string
+                    description: "メッセージのID"
+
+  /v1/message/bookmark/{id}:
+    delete:
+      summary: "ブックマーク削除"
+      description: "特定の生成結果をブックマークから削除する"
+      parameters:
+        - name: id
+          in: path
+          description: "削除するブックマークのID"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message_id:
+                    type: string
+                    description: "メッセージのID"
