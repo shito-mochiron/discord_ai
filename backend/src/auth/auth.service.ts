@@ -4,7 +4,7 @@ import { MailSignupRequestDto } from './dto/mail-signup-request.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { MailLoginRequestDto } from './dto/mail-login-request.dto';
-import { JwtPayload } from 'src/types/jwtpayload';
+import { JwtPayload } from 'src/types/jwtPayload';
 import { GoogleSignupRequestDto } from './dto/google-signup-request.dto';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleLoginRequestDto } from './dto/google-login-request.dto';
@@ -117,7 +117,7 @@ export class AuthService {
                 idToken,
                 audience: this.googleClientId,
             });
-
+            
             const googlePayload = ticket.getPayload();
             if (!googlePayload) {
                 throw new UnauthorizedException('Invalid ID Token');
