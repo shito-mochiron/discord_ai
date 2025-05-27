@@ -13,8 +13,12 @@ RUN npm install
 # アプリケーションのソースコードをコピー
 COPY . .
 
+# entrypoint.sh をコピーし、実行権限を設定
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # ポートを開放
 EXPOSE 3000
 
 # アプリを起動
-CMD ["npm", "run", "start"]
+ENTRYPOINT ["/app/entrypoint.sh"]
