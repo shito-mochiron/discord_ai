@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
+import { OpenAI } from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 @Injectable()
 export class ChatService {
@@ -22,11 +27,24 @@ export class ChatService {
       actualChatId = chat.chat_id;
     }
 
+        // ChatGPT API で返答を生成
+    const gptResponse = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo', // または 'gpt-3.5-turbo'
+      messages: [
+        { role: 'system', content: 'あなたは親切なアシスタントです。' },
+        { role: 'user', content: 'こんにちは' },
+      ],
+    });
+
+    const content_reply = gptResponse.choices[0]?.message?.content ?? '（返答が得られませんでした）';
+
+    console.log(content_reply);
+
     const message = await this.prisma.message.create({
       data: {
         chat_id: actualChatId,
         content,
-        content_reply: `返信: ${content}`,
+        content_reply,
       },
     });
 
