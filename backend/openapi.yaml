@@ -168,7 +168,7 @@ paths:
           description: "認証エラー"
       
 
-  /v1/messeage:
+  /v1/chat/messeage:
     post:
       summary: "メッセージの登録"
       description: "メッセージを登録する"
@@ -241,7 +241,7 @@ paths:
   /v1/chat/pin:
     get:
       summary: "ピン留め一覧取得"
-      description: "ピン留めされたチャットのタイトル一覧を取得する"
+      description: "ピン留めされたチャットの一覧（タイトルとID）を取得する"
       responses:
         "200":
           description: "Success operation"
@@ -253,8 +253,15 @@ paths:
                   pinned_chats:
                     type: array
                     items:
-                      type: string
-                    description: "ピン留めされたチャットのタイトル一覧"
+                      type: object
+                      properties:
+                        chat_id:
+                          type: string
+                          description: "チャットのUUID"
+                        title:
+                          type: string
+                          description: "チャットのタイトル"
+  /v1/chat/{chat_id}/pin:
     post:
       summary: "ピン留め登録"
       description: "チャットをピン留めに登録する"
@@ -280,7 +287,7 @@ paths:
                     type: string
                     description: "ピン留めしたチャットのID"
 
-  /v1/chat/pin/{chat_id}:
+  /v1/chat/{chat_id}/unpin:
     delete:
       summary: "ピン留め削除"
       description: "チャットをピン留めから削除する"

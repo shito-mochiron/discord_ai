@@ -20,6 +20,12 @@ export class ChatController {
     return this.chatService.getChat(chat_id);
   }
 
+  @Get('pin')
+  async getPinnedChats() {
+    const pinnedChats = await this.chatService.getPinnedChats();
+    return { pinned_chats: pinnedChats };
+  }
+
   @Put(':chat_id/pin')
   async setPinned(@Param('chat_id') chat_id: string) {
     return this.chatService.setPinned(chat_id);
