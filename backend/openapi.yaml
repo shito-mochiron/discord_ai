@@ -237,6 +237,27 @@ paths:
                   content_reply:
                     type: string
                     description: "メッセージに対する返答"
+    delete:
+      summary: "履歴削除"
+      description: "履歴にある特定のチャットを削除する"
+      parameters:
+        - name: id
+          in: path
+          description: "削除する履歴のチャットID"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat_id:
+                    type: string
+                    description: "チャットのID"
 
   /v1/chat/pin:
     get:
@@ -338,28 +359,6 @@ paths:
                           format: date-time
                           description: "チャットの日時"
 
-    delete:
-      summary: "履歴削除"
-      description: "履歴にある特定のチャットを削除する"
-      parameters:
-        - name: id
-          in: path
-          description: "削除する履歴のチャットID"
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "Success operation"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  chat_id:
-                    type: string
-                    description: "チャットのID"
-
   /v1/chat/history/search:
     get:
       summary: "履歴検索"
@@ -397,7 +396,7 @@ paths:
                           type: string
                           description: "メッセージ内容"
 
-  /v1/message/bookmark:
+  /v1/chat/message/bookmark:
     get:
       summary: "ブックマーク一覧取得"
       description: "ブックマークに登録されたメッセージの一覧を取得する"
@@ -423,7 +422,9 @@ paths:
                         message:
                           type: string
                           description: "メッセージ内容"
-    post:
+
+  /v1/chat/message/{id}/bookmark:
+    put:
       summary: "ブックマーク登録"
       description: "生成結果をブックマークに登録する"
       requestBody:
@@ -451,8 +452,8 @@ paths:
                     type: string
                     description: "メッセージのID"
 
-  /v1/message/bookmark/{id}:
-    delete:
+  /v1/chat/message/{id}/unbookmark:
+    put:
       summary: "ブックマーク削除"
       description: "特定の生成結果をブックマークから削除する"
       parameters:

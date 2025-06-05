@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 import { OpenAI } from 'openai';
@@ -17,7 +17,6 @@ export class ChatService {
       let actualChatId = chat_id;
       let generatedTitle: string | undefined;
 
-      // 1. chat_idがない場合は新規チャット作成
       if (!chat_id) {
         generatedTitle = content.length > 10 ? content.slice(0, 10) + '...' : content;
         const chat = await this.prisma.chat.create({
@@ -28,28 +27,32 @@ export class ChatService {
           },
         });
         actualChatId = chat.chat_id;
+      } else {
+        // セキュリティ: 他人のチャットにメッセージ投稿できないようにする
+        const chat = await this.prisma.chat.findUnique({
+          where: { chat_id },
+        });
+        if (!chat || chat.id !== user_id) {
+          throw new ForbiddenException('You do not have permission to access this resource.');
+        }
       }
 
-      // 2. 既存のメッセージ履歴を取得（古い順）
       const previousMessages = await this.prisma.message.findMany({
         where: { chat_id: actualChatId },
         orderBy: { created_at: 'asc' },
       });
 
-      // 3. ChatCompletionMessageParam 型に変換
       const messageHistory: ChatCompletionMessageParam[] = previousMessages.flatMap(msg => [
         { role: 'user', content: msg.content },
         { role: 'assistant', content: msg.content_reply },
       ]);
 
-      // 4. 会話の履歴に新しい入力を追加
       const fullMessages: ChatCompletionMessageParam[] = [
         { role: 'system', content: 'You are a helpful assistant.' },
         ...messageHistory,
         { role: 'user', content },
       ];
 
-      // 5. OpenAI に問い合わせ
       const gptResponse = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: fullMessages,
@@ -60,7 +63,6 @@ export class ChatService {
         throw new InternalServerErrorException('Failed to get a response from OpenAI.');
       }
 
-      // 6. メッセージ保存
       const message = await this.prisma.message.create({
         data: {
           chat_id: actualChatId,
@@ -82,8 +84,16 @@ export class ChatService {
     }
   }
 
+  async getChat(chat_id: string, user_id: string) {
+    // まずチャットが存在していて、所有者が一致するか確認
+    const chat = await this.prisma.chat.findUnique({
+      where: { chat_id },
+    });
 
-  async getChat(chat_id: string) {
+    if (!chat || chat.id !== user_id) {
+      throw new ForbiddenException('You do not have permission to access this resource.');
+    }
+
     const messages = await this.prisma.message.findMany({
       where: { chat_id },
       orderBy: { created_at: 'asc' },
@@ -92,32 +102,135 @@ export class ChatService {
     return messages;
   }
 
-  async getPinnedChats(): Promise<{ chat_id: string; title: string }[]> {
+  async getPinnedChats(user_id: string): Promise<{ chat_id: string; title: string }[]> {
     const chats = await this.prisma.chat.findMany({
-      where: { is_pinned: true },
+      where: {
+        is_pinned: true,
+        id: user_id,
+      },
       select: {
         chat_id: true,
         title: true,
       },
     });
-
     return chats;
   }
 
-  async setPinned(chat_id: string) {
-    const updatedChat = await this.prisma.chat.update({
+  async setPinned(chat_id: string, user_id: string) {
+    // ユーザー所有チェック
+    const chat = await this.prisma.chat.findUnique({
+      where: { chat_id },
+    });
+    if (!chat || chat.id !== user_id) {
+      throw new ForbiddenException('You do not have permission to access this resource.');
+    }
+
+    return await this.prisma.chat.update({
       where: { chat_id },
       data: { is_pinned: true },
     });
-    return updatedChat;
   }
 
-  async unsetPinned(chat_id: string) {
-    const updatedChat = await this.prisma.chat.update({
+  async unsetPinned(chat_id: string, user_id: string) {
+    // ユーザー所有チェック
+    const chat = await this.prisma.chat.findUnique({
+      where: { chat_id },
+    });
+    if (!chat || chat.id !== user_id) {
+      throw new ForbiddenException('You do not have permission to access this resource.');
+    }
+
+    return await this.prisma.chat.update({
       where: { chat_id },
       data: { is_pinned: false },
     });
-    return updatedChat;
+  }
+
+  async getChatHistory(user_id: string) {
+    const chats = await this.prisma.chat.findMany({
+      where: { id: user_id },
+      orderBy: {
+        created_at: 'desc',
+      },
+      select: {
+        chat_id: true,
+        title: true,
+        created_at: true,
+      },
+    });
+
+    return {
+      history: chats.map(chat => ({
+        chat_id: chat.chat_id,
+        title: chat.title,
+        timestamp: chat.created_at,
+      })),
+    };
+  }
+
+  async searchChatHistory(user_id: string, query: string) {
+    const messages = await this.prisma.message.findMany({
+      where: {
+        OR: [
+          {
+            content: {
+              contains: query,
+              mode: 'insensitive', // 大文字小文字を無視
+            },
+          },
+          {
+            chat: {
+              title: {
+                contains: query,
+                mode: 'insensitive',
+              },
+              id: user_id, // 所有者チェック
+            },
+          },
+        ],
+        chat: {
+          id: user_id, // 念のためダブルで制限
+        },
+      },
+      select: {
+        message_id: true,
+        chat_id: true,
+        content: true,
+        chat: {
+          select: {
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    return {
+      results: messages.map(msg => ({
+        message_id: msg.message_id,
+        chat_id: msg.chat_id,
+        title: msg.chat.title,
+        message: msg.content,
+      })),
+    };
+  }
+
+  async deleteChat(chat_id: string, user_id: string) {
+    const chat = await this.prisma.chat.findUnique({
+      where: { chat_id },
+    });
+
+    if (!chat || chat.id !== user_id) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    await this.prisma.chat.delete({
+      where: { chat_id },
+    });
+
+    return { chat_id };
   }
 
 }
