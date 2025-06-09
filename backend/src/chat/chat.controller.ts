@@ -33,10 +33,29 @@ export class ChatController {
     const user_id = req.user.user_id;
 
     if (!query || query.trim() === '') {
-      throw new BadRequestException('検索ワードは必須です');
+      throw new BadRequestException("The search keyword is required.");
     }
 
     return this.chatService.searchChatHistory(user_id, query);
+  }
+
+  @Get('message/bookmark')
+  async getBookmarkedMessages(@Request() req) {
+    const user_id = req.user.user_id;
+    const bookmarks = await this.chatService.getBookmarkedMessages(user_id);
+    return { bookmarks };
+  }
+
+  @Put('message/:message_id/bookmark')
+  async bookmarkMessage(@Param('message_id') message_id: string, @Request() req,) {
+    const user_id = req.user.user_id;
+    return this.chatService.bookmarkMessage(message_id, user_id);
+  }
+
+  @Put('message/:message_id/unbookmark')
+  async unbookmarkMessage(@Param('message_id') message_id: string, @Request() req,) {
+    const user_id = req.user.user_id;
+    return this.chatService.unbookmarkMessage(message_id, user_id);
   }
 
   @Put(':chat_id/pin')

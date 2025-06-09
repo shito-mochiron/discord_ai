@@ -12,9 +12,17 @@ const openai = new OpenAI({
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async validateChatOwner(chat_id: string, user_id: string) {
+  const chat = await this.prisma.chat.findUnique({ where: { chat_id } });
+  if (!chat || chat.id !== user_id) {
+    throw new ForbiddenException('You do not have permission to access this resource.');
+  }
+  return chat;
+}
+
   async createMessage(user_id: string, content: string, chat_id?: string) {
     try {
-      let actualChatId = chat_id;
+      let actual_chat_id = chat_id;
       let generatedTitle: string | undefined;
 
       if (!chat_id) {
@@ -26,19 +34,13 @@ export class ChatService {
             title: generatedTitle,
           },
         });
-        actualChatId = chat.chat_id;
+        actual_chat_id = chat.chat_id;
       } else {
-        // セキュリティ: 他人のチャットにメッセージ投稿できないようにする
-        const chat = await this.prisma.chat.findUnique({
-          where: { chat_id },
-        });
-        if (!chat || chat.id !== user_id) {
-          throw new ForbiddenException('You do not have permission to access this resource.');
-        }
+        await this.validateChatOwner(chat_id, user_id);
       }
 
       const previousMessages = await this.prisma.message.findMany({
-        where: { chat_id: actualChatId },
+        where: { chat_id: actual_chat_id },
         orderBy: { created_at: 'asc' },
       });
 
@@ -65,7 +67,7 @@ export class ChatService {
 
       const message = await this.prisma.message.create({
         data: {
-          chat_id: actualChatId,
+          chat_id: actual_chat_id,
           content,
           content_reply,
         },
@@ -73,7 +75,7 @@ export class ChatService {
 
       return {
         message_id: message.message_id,
-        chat_id: actualChatId,
+        chat_id: actual_chat_id,
         content: message.content,
         content_reply: message.content_reply,
         title: generatedTitle,
@@ -85,14 +87,7 @@ export class ChatService {
   }
 
   async getChat(chat_id: string, user_id: string) {
-    // まずチャットが存在していて、所有者が一致するか確認
-    const chat = await this.prisma.chat.findUnique({
-      where: { chat_id },
-    });
-
-    if (!chat || chat.id !== user_id) {
-      throw new ForbiddenException('You do not have permission to access this resource.');
-    }
+    await this.validateChatOwner(chat_id, user_id);
 
     const messages = await this.prisma.message.findMany({
       where: { chat_id },
@@ -118,12 +113,7 @@ export class ChatService {
 
   async setPinned(chat_id: string, user_id: string) {
     // ユーザー所有チェック
-    const chat = await this.prisma.chat.findUnique({
-      where: { chat_id },
-    });
-    if (!chat || chat.id !== user_id) {
-      throw new ForbiddenException('You do not have permission to access this resource.');
-    }
+    await this.validateChatOwner(chat_id, user_id);
 
     return await this.prisma.chat.update({
       where: { chat_id },
@@ -133,12 +123,7 @@ export class ChatService {
 
   async unsetPinned(chat_id: string, user_id: string) {
     // ユーザー所有チェック
-    const chat = await this.prisma.chat.findUnique({
-      where: { chat_id },
-    });
-    if (!chat || chat.id !== user_id) {
-      throw new ForbiddenException('You do not have permission to access this resource.');
-    }
+    await this.validateChatOwner(chat_id, user_id);
 
     return await this.prisma.chat.update({
       where: { chat_id },
@@ -175,7 +160,7 @@ export class ChatService {
           {
             content: {
               contains: query,
-              mode: 'insensitive', // 大文字小文字を無視
+              mode: 'insensitive', 
             },
           },
           {
@@ -184,12 +169,12 @@ export class ChatService {
                 contains: query,
                 mode: 'insensitive',
               },
-              id: user_id, // 所有者チェック
+              id: user_id, 
             },
           },
         ],
         chat: {
-          id: user_id, // 念のためダブルで制限
+          id: user_id, 
         },
       },
       select: {
@@ -218,19 +203,63 @@ export class ChatService {
   }
 
   async deleteChat(chat_id: string, user_id: string) {
-    const chat = await this.prisma.chat.findUnique({
-      where: { chat_id },
-    });
-
-    if (!chat || chat.id !== user_id) {
-      throw new ForbiddenException('Access denied');
-    }
+    await this.validateChatOwner(chat_id, user_id);
 
     await this.prisma.chat.delete({
       where: { chat_id },
     });
 
     return { chat_id };
+  }
+
+  async getBookmarkedMessages(user_id: string) {
+    const messages = await this.prisma.message.findMany({
+      where: {
+        is_bookmarked: true,
+        chat: {
+          id: user_id, // ユーザー所有チェック
+        },
+      },
+      select: {
+        message_id: true,
+      },
+    });
+
+    return messages;
+  }
+
+  async bookmarkMessage(message_id: string, user_id: string) {
+    const message = await this.prisma.message.findUnique({
+      where: { message_id: message_id },
+      include: { chat: true },
+    });
+
+    if (!message || message.chat.id !== user_id) {
+      throw new ForbiddenException('You do not have permission to access this resource.');
+    }
+
+    return await this.prisma.message.update({
+      where: { message_id: message_id },
+      data: { is_bookmarked: false },
+    });
+  }
+
+  async unbookmarkMessage(message_id: string, user_id: string) {
+    const message = await this.prisma.message.findUnique({
+      where: { message_id: message_id },
+      include: { chat: true },
+    });
+
+    if (!message || message.chat.id !== user_id) {
+      throw new ForbiddenException('You do not have permission to access this resource.');
+    }
+
+    return await this.prisma.message.update({
+      where: { message_id: message_id },
+      data: { is_bookmarked: false },
+    });
+
+
   }
 
 }
