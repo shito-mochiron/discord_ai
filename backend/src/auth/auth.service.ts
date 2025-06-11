@@ -40,6 +40,7 @@ export class AuthService {
     const existingUser = await this.prismaService.user.findUnique({
       where: { email },
     });
+
     if (existingUser) {
       throw new ConflictException('This email is already registered');
     }
@@ -53,7 +54,6 @@ export class AuthService {
       },
     });
 
-    // 作成後にログイン処理を使ってJWTを返す
     return this.logIn({ email, password });
   }
 
@@ -92,8 +92,8 @@ export class AuthService {
         },
       });
 
-      // 作成後にログイン処理を使ってJWTを返す
       return this.logInGoogle({ idToken });
+
     } catch (error) {
       throw new UnauthorizedException(
         `Google authentication failed: ${error.message}`,
@@ -121,7 +121,9 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
     };
+
     const token = this.jwtService.sign(payload);
+
     return { token };
   }
 
@@ -130,33 +132,34 @@ export class AuthService {
   ): Promise<{ token: string }> {
     const { idToken } = googleLoginRequestDto;
 
-        try {;
-            const ticket = await this.client.verifyIdToken({
-                idToken,
-                audience: this.googleClientId,
-            });
+    try {
+        const ticket = await this.client.verifyIdToken({
+            idToken,
+            audience: this.googleClientId,
+    });
 
-            const googlePayload = ticket.getPayload();
-            if (!googlePayload) {
-                throw new UnauthorizedException('Invalid ID Token');
-            }
+    const googlePayload = ticket.getPayload();
+    if (!googlePayload) {
+        throw new UnauthorizedException('Invalid ID Token');
+    }
 
-      const { sub } = googlePayload;
+    const { sub } = googlePayload;
 
-      let user = await this.prismaService.user.findUnique({
-        where: { google_auth_sub: sub },
-      });
+    let user = await this.prismaService.user.findUnique({
+      where: { google_auth_sub: sub },
+    });
 
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
 
-      const jwtPayload: JwtPayload = {
-        sub: user.id,
-      };
+    const jwtPayload: JwtPayload = {
+      sub: user.id,
+    };
 
-      const token = this.jwtService.sign(jwtPayload);
-      return { token };
+    const token = this.jwtService.sign(jwtPayload);
+    return { token };
+    
     } catch (error) {
       throw new UnauthorizedException(`Google login failed: ${error.message}`);
     }

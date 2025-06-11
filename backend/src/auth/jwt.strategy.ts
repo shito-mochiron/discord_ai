@@ -12,7 +12,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // ここで req.user に入る値を定義
   async validate(payload: any) {
     return { user_id: payload.sub };
   }

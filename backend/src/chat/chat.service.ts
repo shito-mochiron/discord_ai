@@ -13,12 +13,12 @@ export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async validateChatOwner(chat_id: string, user_id: string) {
-  const chat = await this.prisma.chat.findUnique({ where: { chat_id } });
-  if (!chat || chat.id !== user_id) {
-    throw new ForbiddenException('You do not have permission to access this resource.');
+    const chat = await this.prisma.chat.findUnique({ where: { chat_id } });
+    if (!chat || chat.id !== user_id) {
+      throw new ForbiddenException('You do not have permission to access this resource.');
+    }
+    return chat;
   }
-  return chat;
-}
 
   async createMessage(user_id: string, content: string, chat_id?: string) {
     try {
