@@ -38,7 +38,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('This email is already registered');
+      throw new ForbiddenException('This email is already registered');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -76,9 +76,7 @@ export class AuthService {
       });
 
       if (existingUser) {
-        throw new ConflictException(
-          'This Google account is already registered',
-        );
+        throw new ForbiddenException('This Google account is already registered');
       }
 
       await this.prismaService.user.create({
@@ -91,6 +89,10 @@ export class AuthService {
       return this.logInGoogle({ idToken });
 
     } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw error;
+      }
+
       throw new UnauthorizedException(
         `Google authentication failed: ${error.message}`,
       );
