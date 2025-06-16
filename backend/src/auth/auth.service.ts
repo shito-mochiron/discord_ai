@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailSignupRequestDto } from './dto/mail-signup-request.dto';
 import * as bcrypt from 'bcrypt';
@@ -121,7 +117,6 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
     };
-
     const token = this.jwtService.sign(payload);
 
     return { token };

@@ -4,7 +4,7 @@ import { ChatService } from './chat.service';
 import { MessageRequestDto } from './dto/message-request.dto';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { UserId } from '@/common/decorators/user-id.decorator'; // パスは適宜変更
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('chat')

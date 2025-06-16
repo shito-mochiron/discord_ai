@@ -86,33 +86,73 @@ export class ChatService {
     }
   }
 
-  async getChat(chat_id: string, user_id: string) {
+  async getChat(chat_id: string, user_id: string, page = 1, pageSize = 20) {
     await this.validateChatOwner(chat_id, user_id);
 
-    const messages = await this.prisma.message.findMany({
-      where: { chat_id },
-      orderBy: { created_at: 'asc' },
-    });
+    const [messages, total] = await Promise.all([
+      this.prisma.message.findMany({
+        where: { chat_id },
+        orderBy: { created_at: 'asc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.message.count({
+        where: { chat_id },
+      }),
+    ]);
 
-    return messages;
+    return {
+      data: messages,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
   }
 
-  async getPinnedChats(user_id: string): Promise<{ chat_id: string; title: string }[]> {
-    const chats = await this.prisma.chat.findMany({
-      where: {
-        is_pinned: true,
-        id: user_id,
+  async getPinnedChats(
+    user_id: string,
+    page = 1,
+    pageSize = 20
+  ): Promise<{
+    data: { chat_id: string; title: string }[];
+    pagination: { total: number; page: number; pageSize: number; totalPages: number };
+  }> {
+    const [chats, total] = await Promise.all([
+      this.prisma.chat.findMany({
+        where: {
+          is_pinned: true,
+          id: user_id,
+        },
+        select: {
+          chat_id: true,
+          title: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.chat.count({
+        where: {
+          is_pinned: true,
+          id: user_id,
+        },
+      }),
+    ]);
+
+    return {
+      data: chats,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
       },
-      select: {
-        chat_id: true,
-        title: true,
-      },
-    });
-    return chats;
+    };
   }
 
   async setPinned(chat_id: string, user_id: string) {
-    // ユーザー所有チェック
     await this.validateChatOwner(chat_id, user_id);
 
     return await this.prisma.chat.update({
@@ -122,7 +162,6 @@ export class ChatService {
   }
 
   async unsetPinned(chat_id: string, user_id: string) {
-    // ユーザー所有チェック
     await this.validateChatOwner(chat_id, user_id);
 
     return await this.prisma.chat.update({
@@ -131,18 +170,32 @@ export class ChatService {
     });
   }
 
-  async getChatHistory(user_id: string) {
-    const chats = await this.prisma.chat.findMany({
-      where: { id: user_id },
-      orderBy: {
-        created_at: 'desc',
-      },
-      select: {
-        chat_id: true,
-        title: true,
-        created_at: true,
-      },
-    });
+  async getChatHistory(
+    user_id: string,
+    page = 1,
+    pageSize = 20
+  ): Promise<{
+    history: { chat_id: string; title: string; timestamp: Date }[];
+    pagination: { total: number; page: number; pageSize: number; totalPages: number };
+  }> {
+    const [chats, total] = await Promise.all([
+      this.prisma.chat.findMany({
+        where: { id: user_id },
+        orderBy: {
+          created_at: 'desc',
+        },
+        select: {
+          chat_id: true,
+          title: true,
+          created_at: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.chat.count({
+        where: { id: user_id },
+      }),
+    ]);
 
     return {
       history: chats.map(chat => ({
@@ -150,6 +203,12 @@ export class ChatService {
         title: chat.title,
         timestamp: chat.created_at,
       })),
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
     };
   }
 
@@ -169,7 +228,6 @@ export class ChatService {
                 contains: query,
                 mode: 'insensitive',
               },
-              id: user_id, 
             },
           },
         ],
@@ -212,20 +270,63 @@ export class ChatService {
     return { chat_id };
   }
 
-  async getBookmarkedMessages(user_id: string) {
-    const messages = await this.prisma.message.findMany({
-      where: {
-        is_bookmarked: true,
-        chat: {
-          id: user_id, // ユーザー所有チェック
+  async getBookmarkedMessages(
+    user_id: string,
+    page = 1,
+    pageSize = 20
+  ): Promise<{
+    data: {
+      message_id: string;
+      content: string;
+      content_reply: string | null;
+      chat_id: string;
+    }[];
+    pagination: {
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    };
+  }> {
+    const [messages, total] = await Promise.all([
+      this.prisma.message.findMany({
+        where: {
+          is_bookmarked: true,
+          chat: {
+            id: user_id,
+          },
         },
-      },
-      select: {
-        message_id: true,
-      },
-    });
+        orderBy: {
+          created_at: 'desc',
+        },
+        select: {
+          message_id: true,
+          content: true,
+          content_reply: true,
+          chat_id: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.message.count({
+        where: {
+          is_bookmarked: true,
+          chat: {
+            id: user_id,
+          },
+        },
+      }),
+    ]);
 
-    return messages;
+    return {
+      data: messages,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
   }
 
   async bookmarkMessage(message_id: string, user_id: string) {
@@ -258,8 +359,6 @@ export class ChatService {
       where: { message_id: message_id },
       data: { is_bookmarked: false },
     });
-
-
   }
 
 }
