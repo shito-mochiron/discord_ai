@@ -341,7 +341,7 @@ export class ChatService {
 
     return await this.prisma.message.update({
       where: { message_id: message_id },
-      data: { is_bookmarked: false },
+      data: { is_bookmarked: true },
     });
   }
 
