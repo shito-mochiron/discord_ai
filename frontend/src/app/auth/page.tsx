@@ -2,10 +2,11 @@
 
 import { useSession } from "next-auth/react";
 import { LogoutButton } from "@/app/components/logoutbutton";
+import { Hero } from "@/app/components/hero";
+import { Sidebar } from "@/app/components/sidebar";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
-  console.log("Session Data:", session); 
 
   if (status === "loading"){
     return <div>Loading...</div>;
@@ -13,10 +14,12 @@ export default function Dashboard() {
 
   if (!session) {
     return <p>ログインが必要です。</p>;
-  }
+  } 
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
+      <Hero />
+      <Sidebar />
       <LogoutButton />
     </main>
   );

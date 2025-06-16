@@ -1,18 +1,26 @@
 "use client";
 
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 
-export function LoginButton() {
-  const { data: session } = useSession();
+type LoginButtonProps = {
+  mode: "signup" | "login";
+};
 
+export function LoginButton({ mode }: LoginButtonProps) {
   return (
     <div className="flex flex-col items-center space-y-4">
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/auth" })}
-              className="bg-white text-black px-12 py-2 border border-gray-100 rounded-full"
-            >
-              Google
-            </button>
+      <button
+        onClick={() => {
+          // ✅ クッキーにmodeを保存
+          document.cookie = `auth_mode=${mode}; path=/`;
+          signIn("google", {
+            callbackUrl: "/auth",
+          });
+        }}
+        className="bg-white text-black px-12 py-2 border-2 border-gray-200 rounded-full"
+      >
+        Google {mode === "signup" ? "Signup" : "Login"}
+      </button>
     </div>
   );
 }
