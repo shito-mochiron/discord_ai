@@ -1,7 +1,7 @@
 import {
-  ConflictException,
   Injectable,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailSignupRequestDto } from './dto/mail-signup-request.dto';
@@ -40,8 +40,9 @@ export class AuthService {
     const existingUser = await this.prismaService.user.findUnique({
       where: { email },
     });
+
     if (existingUser) {
-      throw new ConflictException('This email is already registered');
+      throw new ForbiddenException('This email is already registered');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -53,7 +54,6 @@ export class AuthService {
       },
     });
 
-    // 作成後にログイン処理を使ってJWTを返す
     return this.logIn({ email, password });
   }
 
@@ -82,9 +82,7 @@ export class AuthService {
       });
 
       if (existingUser) {
-        throw new ConflictException(
-          'This Google account is already registered',
-        );
+        throw new ForbiddenException('This Google account is already registered');
       }
 
       await this.prismaService.user.create({
@@ -94,9 +92,13 @@ export class AuthService {
         },
       });
 
-      // 作成後にログイン処理を使ってJWTを返す
       return this.logInGoogle({ idToken });
+
     } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw error;
+      }
+
       throw new UnauthorizedException(
         `Google authentication failed: ${error.message}`,
       );
