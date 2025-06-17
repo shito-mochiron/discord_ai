@@ -1,14 +1,10 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailSignupRequestDto } from './dto/mail-signup-request.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { MailLoginRequestDto } from './dto/mail-login-request.dto';
-import { JwtPayload } from 'src/types/jwtPayload';
+import { JwtPayload } from 'src/types/jwtpayload';
 import { GoogleSignupRequestDto } from './dto/google-signup-request.dto';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleLoginRequestDto } from './dto/google-login-request.dto';
@@ -124,6 +120,7 @@ export class AuthService {
       sub: user.id,
     };
     const token = this.jwtService.sign(payload);
+
     return { token };
   }
 
@@ -133,32 +130,33 @@ export class AuthService {
     const { idToken } = googleLoginRequestDto;
 
     try {
-      const ticket = await this.client.verifyIdToken({
-        idToken,
-        audience: this.googleClientId,
-      });
+        const ticket = await this.client.verifyIdToken({
+            idToken,
+            audience: this.googleClientId,
+    });
 
-      const googlePayload = ticket.getPayload();
-      if (!googlePayload) {
+    const googlePayload = ticket.getPayload();
+    if (!googlePayload) {
         throw new UnauthorizedException('Invalid ID Token');
-      }
+    }
 
-      const { sub } = googlePayload;
+    const { sub } = googlePayload;
 
-      let user = await this.prismaService.user.findUnique({
-        where: { google_auth_sub: sub },
-      });
+    let user = await this.prismaService.user.findUnique({
+      where: { google_auth_sub: sub },
+    });
 
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
 
-      const jwtPayload: JwtPayload = {
-        sub: user.id,
-      };
+    const jwtPayload: JwtPayload = {
+      sub: user.id,
+    };
 
-      const token = this.jwtService.sign(jwtPayload);
-      return { token };
+    const token = this.jwtService.sign(jwtPayload);
+    return { token };
+    
     } catch (error) {
       throw new UnauthorizedException(`Google login failed: ${error.message}`);
     }

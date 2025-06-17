@@ -168,7 +168,7 @@ paths:
           description: "認証エラー"
       
 
-  /v1/messeage:
+  /v1/chat/messeage:
     post:
       summary: "メッセージの登録"
       description: "メッセージを登録する"
@@ -179,10 +179,7 @@ paths:
             schema:
               type: object
               properties:
-                chat_id:
-                  type: string
-                  description: "チャットのID"
-                message:
+                content:
                   type: string
                   description: "メッセージの内容"
       responses:
@@ -199,8 +196,14 @@ paths:
                   chat_id:
                     type: string
                     description: "登録されたチャットのID"
+                  title:
+                    type: string
+                    description: "チャットのタイトル"
+                  content_reply:
+                    type: string
+                    description: "メッセージに対する返答"
       
-  /v1/chat/{id}:
+  /v1/chat/{chat_id}:
     get:
       summary: "チャットの取得"
       description: "チャットを取得する"
@@ -228,14 +231,38 @@ paths:
                   message_id:
                     type: string
                     description: "メッセージのID"
-                  message:
+                  content:
                     type: string
                     description: "メッセージ内容"
+                  content_reply:
+                    type: string
+                    description: "メッセージに対する返答"
+    delete:
+      summary: "履歴削除"
+      description: "履歴にある特定のチャットを削除する"
+      parameters:
+        - name: id
+          in: path
+          description: "削除する履歴のチャットID"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success operation"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat_id:
+                    type: string
+                    description: "チャットのID"
 
   /v1/chat/pin:
     get:
       summary: "ピン留め一覧取得"
-      description: "ピン留めされたチャットのタイトル一覧を取得する"
+      description: "ピン留めされたチャットの一覧（タイトルとID）を取得する"
       responses:
         "200":
           description: "Success operation"
@@ -247,8 +274,15 @@ paths:
                   pinned_chats:
                     type: array
                     items:
-                      type: string
-                    description: "ピン留めされたチャットのタイトル一覧"
+                      type: object
+                      properties:
+                        chat_id:
+                          type: string
+                          description: "チャットのUUID"
+                        title:
+                          type: string
+                          description: "チャットのタイトル"
+  /v1/chat/{chat_id}/pin:
     post:
       summary: "ピン留め登録"
       description: "チャットをピン留めに登録する"
@@ -274,7 +308,7 @@ paths:
                     type: string
                     description: "ピン留めしたチャットのID"
 
-  /v1/chat/pin/{id}:
+  /v1/chat/{chat_id}/unpin:
     delete:
       summary: "ピン留め削除"
       description: "チャットをピン留めから削除する"
@@ -325,28 +359,6 @@ paths:
                           format: date-time
                           description: "チャットの日時"
 
-    delete:
-      summary: "履歴削除"
-      description: "履歴にある特定のチャットを削除する"
-      parameters:
-        - name: id
-          in: path
-          description: "削除する履歴のチャットID"
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "Success operation"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  chat_id:
-                    type: string
-                    description: "チャットのID"
-
   /v1/chat/history/search:
     get:
       summary: "履歴検索"
@@ -384,7 +396,7 @@ paths:
                           type: string
                           description: "メッセージ内容"
 
-  /v1/message/bookmark:
+  /v1/chat/message/bookmark:
     get:
       summary: "ブックマーク一覧取得"
       description: "ブックマークに登録されたメッセージの一覧を取得する"
@@ -400,17 +412,13 @@ paths:
                     type: array
                     items:
                       type: object
-                      properties:
-                        chat_id:
-                          type: string
-                          description: "チャットのID"                        
+                      properties:                       
                         message_id:
                           type: string
                           description: "メッセージのID"
-                        message:
-                          type: string
-                          description: "メッセージ内容"
-    post:
+
+  /v1/chat/message/{id}/bookmark:
+    put:
       summary: "ブックマーク登録"
       description: "生成結果をブックマークに登録する"
       requestBody:
@@ -438,8 +446,8 @@ paths:
                     type: string
                     description: "メッセージのID"
 
-  /v1/message/bookmark/{id}:
-    delete:
+  /v1/chat/message/{id}/unbookmark:
+    put:
       summary: "ブックマーク削除"
       description: "特定の生成結果をブックマークから削除する"
       parameters:
