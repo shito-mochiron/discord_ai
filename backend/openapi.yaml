@@ -150,6 +150,28 @@ paths:
           description: "認証エラー"
 
   /v1/user/{id}:
+    get:
+      summary: ユーザー情報を取得する
+      description: 指定したIDのユーザー情報を取得する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "情報取得成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message_id:
+                    type: string
+                    description: "メールアドレス"
     delete:
       summary: ユーザーを削除
       description: 指定したIDのユーザーを削除する
@@ -167,7 +189,6 @@ paths:
         "401":
           description: "認証エラー"
       
-
   /v1/chat/messeage:
     post:
       summary: "メッセージの登録"
