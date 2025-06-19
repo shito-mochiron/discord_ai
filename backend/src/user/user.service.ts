@@ -5,9 +5,12 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getUserById(id: string) {
+  async getUserById(user_id: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id },
+      where: { id: user_id },
+      select: {
+        email: true,
+      },
     });
 
     if (!user) {
@@ -17,18 +20,33 @@ export class UserService {
     return user;
   }
 
-  async deleteUser(id: string) {
+  async deleteUser(user_id: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id },
+      where: { id: user_id },
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    await this.prisma.user.delete({
-      where: { id },
-    });
+  const chats = await this.prisma.chat.findMany({
+    where: { id: user_id },
+    select: { chat_id: true },
+  });
+
+  const chatIds = chats.map(c => c.chat_id);
+
+  await this.prisma.message.deleteMany({
+    where: { chat_id: { in: chatIds } },
+  });
+
+  await this.prisma.chat.deleteMany({
+    where: { id: user_id },
+  });
+
+  await this.prisma.user.delete({
+    where: { id: user_id },
+  });
 
     return { message: 'User deleted successfully' };
   }

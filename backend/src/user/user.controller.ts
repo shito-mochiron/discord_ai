@@ -8,13 +8,13 @@ import { UserId } from '../common/decorators/user-id.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get(':id')
-  async getUser(@Param('id') id: string, @UserId() requesterId: string) {
-    return this.userService.getUserById(id);
+  @Get()
+  async getUser(@UserId() user_id: string) {
+    return this.userService.getUserById(user_id);
   }
 
-  @Delete(':id')
-  async deleteUser(@Param('id') id: string, @UserId() requesterId: string) {
-    return this.userService.deleteUser(id);
+  @Delete()
+  async deleteUser(@UserId() user_id: string) {
+    return this.userService.deleteUser(user_id);
   }
 }
