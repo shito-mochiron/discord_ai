@@ -57,6 +57,8 @@ export class AuthService {
     googleSignupRequestDto: GoogleSignupRequestDto,
   ): Promise<{ token: string }> {
     const { idToken } = googleSignupRequestDto;
+    console.log("e", idToken)
+    console.log("===============")
 
     try {
       const ticket = await this.client.verifyIdToken({
