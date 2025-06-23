@@ -1,13 +1,40 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner"; // トースト通知
 import { LoginButton } from "./components/loginbutton"
 import { SignupModal } from "../app/components/signupmodal"
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signup" | "login">("login");
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // 成功時のみ /auth に遷移させる
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.appJwt) {
+      router.push("/auth");
+    }
+  }, [status, session, router]);
+
+  // エラーハンドリング（401, 403, その他）
+  useEffect(() => {
+    const error = session?.authError;
+
+    if (status === "authenticated" && error) {
+      if (error === 403) {
+        setAuthMode("login");
+        setIsModalOpen(true); // ログインモーダルを開く
+      } else if (error === 401) {
+        toast.error("Google認証に失敗しました");
+      } else {
+        toast.error("サインインに失敗しました。再度Singup/Loginをお試しください");
+      }
+    }
+  }, [session, status]);
 
   return (
     <main className="flex flex-col items-center justify-center h-screen bg-white">

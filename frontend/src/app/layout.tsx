@@ -1,7 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react"
-
+import { Toaster } from "sonner";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -23,13 +23,16 @@ const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="ja">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SessionProvider>{children}</SessionProvider> 
+        <SessionProvider>
+          <Toaster position="top-center" richColors closeButton />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

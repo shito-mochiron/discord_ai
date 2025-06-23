@@ -45,16 +45,17 @@ export const authOptions: AuthOptions = {
             const data = await res.json();
             token.appJwt = data.token; // アプリ用のJWT
             token.userId = data.userId;     // 任意：ユーザーIDなど
+            token.authError = null;
 
           } else {
             const errorText = await res.text();
             console.error("Backend auth failed:", errorText);
-            token.authError = "account_exists";
+            token.authError = res.status; // ✅ 数値（401, 403 など）を代入
           }
           
         } catch (err) {
           console.error("JWT callback error:", err);
-          token.authError = "server_error";
+          token.authError = 500; // ✅ 通信エラーなど → 500 (Internal Server Error)
         }
       }
       return token;

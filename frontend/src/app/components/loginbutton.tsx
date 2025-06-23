@@ -14,7 +14,7 @@ export function LoginButton({ mode }: LoginButtonProps) {
           // ✅ クッキーにmodeを保存
           document.cookie = `auth_mode=${mode}; path=/`;
           signIn("google", {
-            callbackUrl: "/auth",
+            callbackUrl: "/",
           });
         }}
         className="bg-white text-black px-12 py-2 border-2 border-gray-200 rounded-full"

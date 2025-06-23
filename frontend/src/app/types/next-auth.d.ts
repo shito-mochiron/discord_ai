@@ -9,7 +9,9 @@ declare module "next-auth" {
       appJwt?: string;
       userId?: string;
       role?: string;
+      statusCode?: number;
     } & DefaultSession["user"];
+    authError?: number | null;
   }
 
   interface User {
@@ -24,5 +26,7 @@ declare module "next-auth/jwt" {
     appJwt?: string;
     userId?: string;
     role?: string;
+    statusCode?: number;
+    authError?: number | null;
   }
 }
